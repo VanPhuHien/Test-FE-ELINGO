@@ -13,7 +13,7 @@ describe('Input Component', () => {
   it('should render error message when error prop is provided', () => {
     render(<Input id="test-input" label="Email" error="Email không hợp lệ" value="" onChange={() => { }} />)
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Email không hợp lệ')
+    expect(screen.getByRole('alert')).toHaveTextContent('Thong bao sai roi')
   })
 
   it('should toggle password visibility on clicking eye icon', async () => {
