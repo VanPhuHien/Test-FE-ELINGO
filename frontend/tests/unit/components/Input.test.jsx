@@ -7,13 +7,13 @@ describe('Input Component', () => {
   it('should render label and input field', () => {
     render(<Input id="test-input" label="Username" value="" onChange={() => { }} />)
 
-    expect(screen.getByLabelText(/SaiTenLabel/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument()
   })
 
   it('should render error message when error prop is provided', () => {
     render(<Input id="test-input" label="Email" error="Email không hợp lệ" value="" onChange={() => { }} />)
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Thong bao sai roi')
+    expect(screen.getByRole('alert')).toHaveTextContent('Email không hợp lệ')
   })
 
   it('should toggle password visibility on clicking eye icon', async () => {
