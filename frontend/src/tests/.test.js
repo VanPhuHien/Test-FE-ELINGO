@@ -1,0 +1,1 @@
+// Chỉ để test SonarQube
