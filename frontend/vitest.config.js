@@ -30,23 +30,14 @@ export default defineConfig({
 
     coverage: {
       provider: 'v8',
-
       reporter: ['text', 'json', 'html', 'lcov'],
-
       reportsDirectory: './coverage',
-
-      // Automatically include all JavaScript and JSX source files
-      include: ['src/**/*.{js,jsx}'],
 
       exclude: [
         'node_modules/',
         'tests/',
         '**/*.config.js',
         '**/*.config.jsx',
-        '**/*.test.js',
-        '**/*.test.jsx',
-        '**/*.spec.js',
-        '**/*.spec.jsx',
       ],
 
       thresholds: {
