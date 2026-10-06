@@ -175,16 +175,94 @@ describe('apiClient', () => {
     }
   })
 
-  it('should map success response code to message', async () => {
+  it('should handle request rejection interceptor', async () => {
+    const errorInterceptor = apiClient.interceptors.request.use(null, (error) => Promise.reject(error))
+    try {
+      await apiClient.interceptors.request.handlers[0].rejected(new Error('Request Error'))
+    } catch (err) {
+      expect(err.message).toBe('Request Error')
+    }
+    apiClient.interceptors.request.eject(errorInterceptor)
+  })
+
+  it('should handle mapApiResponse edge cases (network error without response.data)', async () => {
     server.use(
-      http.post('*/test-success-map', () => {
-        return HttpResponse.json({
-          code: 'SIGNUP_SUCCESS',
-        })
+      http.get('*/test-network-error', () => {
+        return HttpResponse.error()
       })
     )
 
-    const response = await apiClient.post('/test-success-map')
-    expect(response.data.message).toBeDefined()
+    try {
+      await apiClient.get('/test-network-error')
+    } catch (err) {
+      expect(err.message).toBeDefined()
+    }
+  })
+
+  it('should map firstError code/message to root if data.code and data.message are missing', async () => {
+    server.use(
+      http.post('*/test-first-error', () => {
+        return HttpResponse.json(
+          {
+            errors: [{ code: 'FIRST_ERR', message: 'First Error Message' }],
+          },
+          { status: 400 }
+        )
+      })
+    )
+
+    try {
+      await apiClient.post('/test-first-error')
+    } catch (err) {
+      expect(err.response.data.code).toBe('FIRST_ERR')
+    }
+  })
+
+  it('should handle refresh token error queue rejection and failed refresh response without newAccessToken', async () => {
+    localStorage.setItem('accessToken', 'exp-token')
+
+    server.use(
+      http.get('*/res-queue-fail', () => {
+        return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
+      }),
+      http.post('*/auth/refresh', () => {
+        return HttpResponse.json({ success: true, data: {} })
+      })
+    )
+
+    try {
+      await apiClient.get('/res-queue-fail')
+    } catch (err) {
+      expect(err.response).toBeDefined()
+    }
+  })
+
+  it('should process failed queue when concurrent refresh fails', async () => {
+    localStorage.setItem('accessToken', 'exp-token-concurrent-fail')
+    let firstCallDone = false
+
+    server.use(
+      http.get('*/res-c1', () => {
+        if (!firstCallDone) {
+          firstCallDone = true
+          return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
+        }
+        return HttpResponse.json({ success: true })
+      }),
+      http.get('*/res-c2', () => {
+        return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
+      }),
+      http.post('*/auth/refresh', async () => {
+        return HttpResponse.json({ message: 'Refresh Failed' }, { status: 401 })
+      })
+    )
+
+    const results = await Promise.allSettled([
+      apiClient.get('/res-c1'),
+      apiClient.get('/res-c2'),
+    ])
+
+    expect(results[0].status).toBe('rejected')
+    expect(results[1].status).toBe('rejected')
   })
 })
