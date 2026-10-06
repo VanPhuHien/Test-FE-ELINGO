@@ -5,20 +5,20 @@ import Input from '@/components/Input/Input'
 
 describe('Input Component', () => {
   it('should render label and input field', () => {
-    render(<Input id="test-input" label="Username" value="" onChange={() => { }} />)
+    render(<Input id="test-input" label="Username" value="" onChange={() => {}} />)
 
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument()
   })
 
   it('should render error message when error prop is provided', () => {
-    render(<Input id="test-input" label="Email" error="Email không hợp lệ" value="" onChange={() => { }} />)
+    render(<Input id="test-input" label="Email" error="Email không hợp lệ" value="" onChange={() => {}} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent('Email không hợp lệ')
   })
 
   it('should toggle password visibility on clicking eye icon', async () => {
     const user = userEvent.setup()
-    render(<Input id="test-pass" label="Mật khẩu" type="password" value="secret" onChange={() => { }} />)
+    render(<Input id="test-pass" label="Mật khẩu" type="password" value="secret" onChange={() => {}} />)
 
     const input = screen.getByLabelText(/^mật khẩu$/i)
     expect(input).toHaveAttribute('type', 'password')
@@ -35,7 +35,7 @@ describe('Input Component', () => {
         id="test-input"
         label="Search"
         value=""
-        onChange={() => { }}
+        onChange={() => {}}
         rightElement={<button>Search</button>}
       />
     )
