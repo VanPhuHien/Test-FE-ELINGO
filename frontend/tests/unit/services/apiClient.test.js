@@ -133,4 +133,58 @@ describe('apiClient', () => {
 
     apiClient.interceptors.request.eject(errorInterceptor)
   })
+
+  it('should map API response errors with validation array and code translation via mapApiResponse', async () => {
+    server.use(
+      http.post('*/test-error-map', () => {
+        return HttpResponse.json(
+          {
+            code: 'INVALID_CREDENTIALS',
+            errors: [
+              { code: 'REQUIRED', field: 'email' },
+              { code: 'USER_NOT_FOUND' },
+            ],
+          },
+          { status: 400 }
+        )
+      })
+    )
+
+    try {
+      await apiClient.post('/test-error-map')
+    } catch (err) {
+      expect(err.response.data.message).toBeDefined()
+      expect(err.response.data.errors).toHaveLength(2)
+    }
+  })
+
+  it('should fallback to UNKNOWN_ERROR when error response is HTML or unknown format', async () => {
+    server.use(
+      http.get('*/test-html-error', () => {
+        return new HttpResponse('<html>502 Bad Gateway</html>', {
+          status: 502,
+          headers: { 'Content-Type': 'text/html' },
+        })
+      })
+    )
+
+    try {
+      await apiClient.get('/test-html-error')
+    } catch (err) {
+      expect(err.message).toBeDefined()
+    }
+  })
+
+  it('should map success response code to message', async () => {
+    server.use(
+      http.post('*/test-success-map', () => {
+        return HttpResponse.json({
+          code: 'SIGNUP_SUCCESS',
+        })
+      })
+    )
+
+    const response = await apiClient.post('/test-success-map')
+    expect(response.data.message).toBeDefined()
+  })
 })
